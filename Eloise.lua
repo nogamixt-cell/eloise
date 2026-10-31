@@ -3,13 +3,12 @@ local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 local UserInputService = game:GetService("UserInputService")
 local Workspace = game:GetService("Workspace")
-
 local LocalPlayer = Players.LocalPlayer
 local Camera = Workspace.CurrentCamera
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local Settings = {
-    Aimbot = false, AimPart = "Head", FOV = 120, FOVColor = Color3.fromRGB(200, 100, 255),
+    Aimbot = false, Part = "Head", FOV = 120, FOVColor = Color3.fromRGB(200, 100, 255),
     ShowFOV = true, TeamCheck = true, Smooth = 0.25, MaxDist = 1500,
     ESP = true, Box = true, Lines = true, Health = true, Skeleton = true, Names = true,
     BoxColor = Color3.fromRGB(255, 50, 100), LineColor = Color3.fromRGB(255, 255, 255),
@@ -29,77 +28,18 @@ gui.IgnoreGuiInset = true
 gui.DisplayOrder = 999
 gui.Parent = PlayerGui
 
-local loading = Instance.new("Frame", gui)
-loading.Size = UDim2.new(1, 0, 1, 0)
-loading.BackgroundColor3 = Color3.fromRGB(15, 5, 30)
-loading.ZIndex = 10
-
-local lTitle = Instance.new("TextLabel", loading)
-lTitle.Size = UDim2.new(1, 0, 0, 80)
-lTitle.Position = UDim2.new(0, 0, 0.4, -40)
-lTitle.BackgroundTransparency = 1
-lTitle.Text = "ELOISE GONCALVES"
-lTitle.Font = Enum.Font.GothamBlack
-lTitle.TextSize = 34
-lTitle.TextColor3 = Color3.fromRGB(200, 100, 255)
-lTitle.ZIndex = 11
-
-task.delay(2, function()
-    TweenService:Create(loading, TweenInfo.new(0.5), {BackgroundTransparency=1}):Play()
-    TweenService:Create(lTitle, TweenInfo.new(0.5), {TextTransparency=1}):Play()
-    task.wait(0.6)
-    loading:Destroy()
-end)
-
-local ball = Instance.new("TextButton", gui)
-ball.Size = UDim2.new(0, 56, 0, 56)
-ball.Position = UDim2.new(0, 15, 0.5, -28)
-ball.BackgroundColor3 = Color3.fromRGB(180, 100, 255)
-ball.BorderSizePixel = 0
-ball.Text = "ELOISE"
-ball.TextColor3 = Color3.new(1, 1, 1)
-ball.Font = Enum.Font.GothamBlack
-ball.TextSize = 10
-ball.AutoButtonColor = false
-ball.ZIndex = 20
-ball.Visible = false
-Instance.new("UICorner", ball).CornerRadius = UDim.new(1, 0)
-
-local dragging, dragStart, startPos
-ball.InputBegan:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
-        dragStart = input.Position
-        startPos = ball.Position
-    end
-end)
-UserInputService.InputChanged:Connect(function(input)
-    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
-        local delta = input.Position - dragStart
-        ball.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-    end
-end)
-UserInputService.InputEnded:Connect(function(input)
-    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
-    end
-end)
-task.delay(2.4, function() ball.Visible = true end)
-
 local menu = Instance.new("Frame", gui)
 menu.Size = UDim2.new(0.92, 0, 0.8, 0)
 menu.Position = UDim2.new(0.04, 0, 0.1, 0)
 menu.BackgroundColor3 = Color3.fromRGB(18, 13, 30)
 menu.BorderSizePixel = 0
-menu.Visible = false
-menu.ZIndex = 15
+menu.Visible = true
 Instance.new("UICorner", menu).CornerRadius = UDim.new(0, 14)
 
 local topBar = Instance.new("Frame", menu)
 topBar.Size = UDim2.new(1, 0, 0, 44)
 topBar.BackgroundColor3 = Color3.fromRGB(30, 20, 50)
 topBar.BorderSizePixel = 0
-topBar.ZIndex = 16
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 14)
 
 local title = Instance.new("TextLabel", topBar)
@@ -111,7 +51,6 @@ title.Font = Enum.Font.GothamBlack
 title.TextSize = 15
 title.TextColor3 = Color3.new(1, 1, 1)
 title.TextXAlignment = Enum.TextXAlignment.Left
-title.ZIndex = 17
 
 local closeBtn = Instance.new("TextButton", topBar)
 closeBtn.Size = UDim2.new(0, 32, 0, 32)
@@ -122,8 +61,19 @@ closeBtn.Text = "X"
 closeBtn.TextColor3 = Color3.new(1, 1, 1)
 closeBtn.Font = Enum.Font.GothamBlack
 closeBtn.TextSize = 18
-closeBtn.ZIndex = 17
 Instance.new("UICorner", closeBtn).CornerRadius = UDim.new(0, 8)
+
+local ball = Instance.new("TextButton", gui)
+ball.Size = UDim2.new(0, 56, 0, 56)
+ball.Position = UDim2.new(0, 15, 0.5, -28)
+ball.BackgroundColor3 = Color3.fromRGB(180, 100, 255)
+ball.BorderSizePixel = 0
+ball.Text = "ELOISE"
+ball.TextColor3 = Color3.new(1, 1, 1)
+ball.Font = Enum.Font.GothamBlack
+ball.TextSize = 10
+ball.Visible = false
+Instance.new("UICorner", ball).CornerRadius = UDim.new(1, 0)
 
 local content = Instance.new("ScrollingFrame", menu)
 content.Size = UDim2.new(1, -16, 1, -56)
@@ -131,14 +81,11 @@ content.Position = UDim2.new(0, 8, 0, 48)
 content.BackgroundTransparency = 1
 content.BorderSizePixel = 0
 content.ScrollBarThickness = 4
-content.ScrollBarImageColor3 = Color3.fromRGB(180, 100, 255)
 content.CanvasSize = UDim2.new(0, 0, 0, 0)
 content.AutomaticCanvasSize = Enum.AutomaticSize.Y
-content.ZIndex = 16
 
 local layout = Instance.new("UIListLayout", content)
 layout.Padding = UDim.new(0, 6)
-layout.SortOrder = Enum.SortOrder.LayoutOrder
 
 local pad = Instance.new("UIPadding", content)
 pad.PaddingLeft = UDim.new(0, 4)
@@ -167,7 +114,6 @@ local function toggle(text, def, cb)
     f.BackgroundColor3 = Color3.fromRGB(30, 25, 45)
     f.BorderSizePixel = 0
     Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-    
     local l = Instance.new("TextLabel", f)
     l.Size = UDim2.new(1, -70, 1, 0)
     l.Position = UDim2.new(0, 14, 0, 0)
@@ -177,20 +123,17 @@ local function toggle(text, def, cb)
     l.TextSize = 12
     l.TextColor3 = Color3.new(1, 1, 1)
     l.TextXAlignment = Enum.TextXAlignment.Left
-    
     local sw = Instance.new("Frame", f)
     sw.Size = UDim2.new(0, 42, 0, 22)
     sw.Position = UDim2.new(1, -56, 0.5, -11)
     sw.BackgroundColor3 = def and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(50, 45, 65)
     sw.BorderSizePixel = 0
     Instance.new("UICorner", sw).CornerRadius = UDim.new(1, 0)
-    
     local st = def
     local btn = Instance.new("TextButton", f)
     btn.Size = UDim2.new(1, 0, 1, 0)
     btn.BackgroundTransparency = 1
     btn.Text = ""
-    
     btn.MouseButton1Click:Connect(function()
         st = not st
         TweenService:Create(sw, TweenInfo.new(0.2), {BackgroundColor3 = st and Color3.fromRGB(180, 100, 255) or Color3.fromRGB(50, 45, 65)}):Play()
@@ -204,7 +147,6 @@ local function slider(text, min, max, def, cb)
     f.BackgroundColor3 = Color3.fromRGB(30, 25, 45)
     f.BorderSizePixel = 0
     Instance.new("UICorner", f).CornerRadius = UDim.new(0, 8)
-    
     local l = Instance.new("TextLabel", f)
     l.Size = UDim2.new(1, -90, 0, 20)
     l.Position = UDim2.new(0, 14, 0, 4)
@@ -214,7 +156,6 @@ local function slider(text, min, max, def, cb)
     l.TextSize = 12
     l.TextColor3 = Color3.new(1, 1, 1)
     l.TextXAlignment = Enum.TextXAlignment.Left
-    
     local v = Instance.new("TextLabel", f)
     v.Size = UDim2.new(0, 80, 0, 20)
     v.Position = UDim2.new(1, -92, 0, 4)
@@ -224,20 +165,17 @@ local function slider(text, min, max, def, cb)
     v.TextSize = 12
     v.TextColor3 = Color3.fromRGB(180, 100, 255)
     v.TextXAlignment = Enum.TextXAlignment.Right
-    
     local bb = Instance.new("Frame", f)
     bb.Size = UDim2.new(1, -28, 0, 6)
     bb.Position = UDim2.new(0, 14, 1, -14)
     bb.BackgroundColor3 = Color3.fromRGB(50, 45, 65)
     bb.BorderSizePixel = 0
     Instance.new("UICorner", bb).CornerRadius = UDim.new(1, 0)
-    
     local bf = Instance.new("Frame", bb)
     bf.Size = UDim2.new((def - min) / (max - min), 0, 1, 0)
     bf.BackgroundColor3 = Color3.fromRGB(180, 100, 255)
     bf.BorderSizePixel = 0
     Instance.new("UICorner", bf).CornerRadius = UDim.new(1, 0)
-    
     local dragging = false
     local function update(x)
         local r = math.clamp((x - bb.AbsolutePosition.X) / math.max(bb.AbsoluteSize.X, 1), 0, 1)
@@ -247,13 +185,11 @@ local function slider(text, min, max, def, cb)
         bf.Size = UDim2.new(r, 0, 1, 0)
         if cb then cb(n) end
     end
-    
     local h = Instance.new("TextButton", bb)
     h.Size = UDim2.new(1, 0, 3, 0)
     h.Position = UDim2.new(0, 0, -1, 0)
     h.BackgroundTransparency = 1
     h.Text = ""
-    
     h.InputBegan:Connect(function(i)
         if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
             dragging = true
@@ -281,7 +217,6 @@ local function button(text, cb, color)
     b.TextColor3 = Color3.new(1, 1, 1)
     b.Font = Enum.Font.GothamBold
     b.TextSize = 12
-    b.AutoButtonColor = false
     Instance.new("UICorner", b).CornerRadius = UDim.new(0, 8)
     b.MouseButton1Click:Connect(function() cb() end)
 end
@@ -290,7 +225,6 @@ section("AIMBOT")
 toggle("Ativar Aimbot", false, function(v) Settings.Aimbot = v end)
 toggle("Team Check", true, function(v) Settings.TeamCheck = v end)
 slider("Suavidade", 0.05, 1, 0.25, function(v) Settings.Smooth = v end)
-section("FOV")
 slider("Tamanho FOV", 20, 500, 120, function(v) Settings.FOV = v end)
 
 section("ESP")
@@ -302,7 +236,7 @@ toggle("Esqueleto", true, function(v) Settings.Skeleton = v end)
 toggle("Nome + HP", true, function(v) Settings.Names = v end)
 
 section("COMBATE")
-toggle("Hitbox Aumentada", false, function(v) Settings.Hitbox = v; if not v and restoreHitbox then restoreHitbox() end end)
+toggle("Hitbox Aumentada", false, function(v) Settings.Hitbox = v end)
 slider("Tamanho Hitbox", 5, 50, 15, function(v) Settings.HitboxSize = v end)
 toggle("Pal do Neblu na Eloise", false, function(v) Settings.Spin = v end)
 slider("Velocidade Spin", 5, 60, 20, function(v) Settings.SpinSpeed = v end)
@@ -338,12 +272,7 @@ button("Matar Todos", function()
 end, Color3.fromRGB(255, 50, 80))
 
 closeBtn.MouseButton1Click:Connect(function() menu.Visible = false; ball.Visible = true end)
-ball.MouseButton1Click:Connect(function()
-    if not dragging then
-        menu.Visible = not menu.Visible
-        ball.Visible = not menu.Visible
-    end
-end)
+ball.MouseButton1Click:Connect(function() menu.Visible = true; ball.Visible = false end)
 
 local hasDrawing = false
 pcall(function() local d = Drawing.new("Circle"); d:Remove(); hasDrawing = true end)
@@ -364,7 +293,7 @@ local function getTarget()
         if p ~= LocalPlayer and p.Character then
             local h = p.Character:FindFirstChildOfClass("Humanoid")
             if h and h.Health > 0 and not (Settings.TeamCheck and p.Team == LocalPlayer.Team) then
-                local part = p.Character:FindFirstChild(Settings.AimPart) or p.Character:FindFirstChild("Head")
+                local part = p.Character:FindFirstChild(Settings.Part) or p.Character:FindFirstChild("Head")
                 if part then
                     local dist = (part.Position - Camera.CFrame.Position).Magnitude
                     if dist <= Settings.MaxDist then
@@ -447,15 +376,6 @@ local function mkESP(p)
         end
     end
     espData[p] = {BB = bb, Box = box, HP = hp, Nm = nm, Line = line, Skel = skel}
-end
-
-function restoreHitbox()
-    for _, p in ipairs(Players:GetPlayers()) do
-        if p ~= LocalPlayer and p.Character then
-            local hrp = p.Character:FindFirstChild("HumanoidRootPart")
-            if hrp then hrp.Size = Vector3.new(2, 2, 1); hrp.Transparency = 1 end
-        end
-    end
 end
 
 local flyBV, flyBG
@@ -550,4 +470,58 @@ end)
 
 RunService.Heartbeat:Connect(function()
     if Settings.Hitbox then
-        for _, p in
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character then
+                local hrp = p.Character:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    hrp.Size = Vector3.new(Settings.HitboxSize, Settings.HitboxSize, Settings.HitboxSize)
+                    hrp.Transparency = 0.7
+                    hrp.CanCollide = false
+                end
+            end
+        end
+    end
+end)
+
+RunService.RenderStepped:Connect(function()
+    pcall(function()
+        if not Settings.ESP then clearESP(); return end
+        
+        for _, p in ipairs(Players:GetPlayers()) do
+            if p ~= LocalPlayer and p.Character and not espData[p] then mkESP(p) end
+        end
+        
+        for p, d in pairs(espData) do
+            local head = p.Character and p.Character:FindFirstChild("Head")
+            local hu = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+            if not head or not hu or hu.Health <= 0 then
+                pcall(function() d.BB:Destroy() end)
+                pcall(function() if d.Line then d.Line:Remove() end end)
+                for _, l in ipairs(d.Skel or {}) do pcall(function() l:Remove() end) end
+                espData[p] = nil
+            else
+                d.Box.BorderColor3 = Settings.BoxColor
+                d.Box.Visible = Settings.Box
+                d.HP.Size = UDim2.new(0, 4, hu.Health / hu.MaxHealth, 0)
+                d.HP.BackgroundColor3 = Settings.HealthColor
+                d.HP.Visible = Settings.Health
+                d.Nm.Visible = Settings.Names
+                d.Nm.Text = p.Name .. " [" .. math.floor(hu.Health) .. "]"
+                
+                if d.Line and Settings.Lines then
+                    local sp, on = Camera:WorldToViewportPoint(head.Position)
+                    if on then
+                        d.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
+                        d.Line.To = Vector2.new(sp.X, sp.Y)
+                        d.Line.Color = Settings.LineColor
+                        d.Line.Visible = true
+                    else
+                        d.Line.Visible = false
+                    end
+                elseif d.Line then d.Line.Visible = false end
+            end
+        end
+    end)
+end)
+
+print("[Eloise] Script carregado com sucesso!")
