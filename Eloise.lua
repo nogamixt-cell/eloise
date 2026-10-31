@@ -10,7 +10,7 @@ local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 local Settings = {
     Aimbot = false, Part = "Head", FOV = 120, FOVColor = Color3.fromRGB(200, 100, 255),
     ShowFOV = true, TeamCheck = true, Smooth = 0.25, MaxDist = 1500,
-    ESP = true, Box = true, Lines = true, Health = true, Skeleton = true, Names = true,
+    ESP = true, Box = true, Lines = true, Health = true, Skeleton = true, Names = true, ESPTeamCheck = true,
     BoxColor = Color3.fromRGB(255, 50, 100), LineColor = Color3.fromRGB(255, 255, 255),
     HealthColor = Color3.fromRGB(0, 255, 100), SkelColor = Color3.fromRGB(255, 255, 0),
     Hitbox = false, HitboxSize = 15, Spin = false, SpinSpeed = 20,
@@ -229,6 +229,7 @@ slider("Tamanho FOV", 20, 500, 120, function(v) Settings.FOV = v end)
 
 section("ESP")
 toggle("Ativar ESP", true, function(v) Settings.ESP = v; if not v and clearESP then clearESP() end end)
+toggle("Ignorar Time no ESP", true, function(v) Settings.ESPTeamCheck = v end)
 toggle("Caixa", true, function(v) Settings.Box = v end)
 toggle("Linhas", true, function(v) Settings.Lines = v end)
 toggle("Barra de Vida", true, function(v) Settings.Health = v end)
@@ -375,7 +376,7 @@ local function mkESP(p)
             end)
         end
     end
-    espData[p] = {BB = bb, Box = box, HP = hp, Nm = nm, Line = line, Skel = skel}
+    espData[p] = {BB = bb, Box = box, HP = hp, Nm = nm, Line = line, Skel = skel, Head = head}
 end
 
 local flyBV, flyBG
@@ -412,6 +413,7 @@ function toggleNoclip(on)
 end
 
 local jkC
+local originalC0 = {}
 function toggleJerkoff(on)
     if jkC then jkC:Disconnect(); jkC = nil end
     if on then
@@ -419,25 +421,25 @@ function toggleJerkoff(on)
             if LocalPlayer.Character then
                 for _, m in ipairs(LocalPlayer.Character:GetDescendants()) do
                     if m:IsA("Motor6D") then
-                        m.Transform = CFrame.Angles(math.random() * math.pi * 2, math.random() * math.pi * 2, math.random() * math.pi * 2)
+                        if not originalC0[m] then originalC0[m] = m.C0 end
+                        m.C0 = originalC0[m] * CFrame.Angles(
+                            math.random(-1, 1), 
+                            math.random(-1, 1), 
+                            math.random(-1, 1)
+                        )
                     end
                 end
             end
         end)
+    else
+        for m, c0 in pairs(originalC0) do
+            if m.Parent then m.C0 = c0 end
+        end
+        originalC0 = {}
     end
 end
 
 RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if fovCircle then
-            local cn = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
-            fovCircle.Position = cn
-            fovCircle.Radius = Settings.FOV
-            fovCircle.Color = Settings.FOVColor
-            fovCircle.Visible = Settings.ShowFOV
-        end
-    end)
-    
     if Settings.Aimbot then
         pcall(function()
             local t = getTarget()
@@ -484,44 +486,46 @@ RunService.Heartbeat:Connect(function()
 end)
 
 RunService.RenderStepped:Connect(function()
-    pcall(function()
-        if not Settings.ESP then clearESP(); return end
-        
-        for _, p in ipairs(Players:GetPlayers()) do
-            if p ~= LocalPlayer and p.Character and not espData[p] then mkESP(p) end
-        end
-        
-        for p, d in pairs(espData) do
-            local head = p.Character and p.Character:FindFirstChild("Head")
-            local hu = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
-            if not head or not hu or hu.Health <= 0 then
-                pcall(function() d.BB:Destroy() end)
-                pcall(function() if d.Line then d.Line:Remove() end end)
-                for _, l in ipairs(d.Skel or {}) do pcall(function() l:Remove() end) end
-                espData[p] = nil
-            else
-                d.Box.BorderColor3 = Settings.BoxColor
-                d.Box.Visible = Settings.Box
-                d.HP.Size = UDim2.new(0, 4, hu.Health / hu.MaxHealth, 0)
-                d.HP.BackgroundColor3 = Settings.HealthColor
-                d.HP.Visible = Settings.Health
-                d.Nm.Visible = Settings.Names
-                d.Nm.Text = p.Name .. " [" .. math.floor(hu.Health) .. "]"
-                
-                if d.Line and Settings.Lines then
-                    local sp, on = Camera:WorldToViewportPoint(head.Position)
-                    if on then
-                        d.Line.From = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y)
-                        d.Line.To = Vector2.new(sp.X, sp.Y)
-                        d.Line.Color = Settings.LineColor
-                        d.Line.Visible = true
-                    else
-                        d.Line.Visible = false
+    if not Settings.ESP then 
+        clearESP() 
+        return 
+    end
+    
+    for _, p in ipairs(Players:GetPlayers()) do
+        if p ~= LocalPlayer and p.Character then
+            local hu = p.Character:FindFirstChildOfClass("Humanoid")
+            local head = p.Character:FindFirstChild("Head")
+            local isTeammate = (p.Team == LocalPlayer.Team)
+            
+            if Settings.ESPTeamCheck and isTeammate then
+                if espData[p] then
+                    if espData[p].BB then espData[p].BB:Destroy() end
+                    if espData[p].Line then espData[p].Line:Remove() end
+                    for _, l in ipairs(espData[p].Skel or {}) do l:Remove() end
+                    espData[p] = nil
+                end
+            elseif hu and hu.Health > 0 and head then
+                if not espData[p] or espData[p].Head ~= head then
+                    if espData[p] then
+                        if espData[p].BB then espData[p].BB:Destroy() end
+                        if espData[p].Line then espData[p].Line:Remove() end
+                        for _, l in ipairs(espData[p].Skel or {}) do l:Remove() end
                     end
-                elseif d.Line then d.Line.Visible = false end
+                    mkESP(p)
+                end
+            else
+                if espData[p] then
+                    if espData[p].BB then espData[p].BB:Destroy() end
+                    if espData[p].Line then espData[p].Line:Remove() end
+                    for _, l in ipairs(espData[p].Skel or {}) do l:Remove() end
+                    espData[p] = nil
+                end
             end
         end
-    end)
-end)
-
-print("[Eloise] Script carregado com sucesso!")
+    end
+    
+    for p, d in pairs(espData) do
+        local hu = p.Character and p.Character:FindFirstChildOfClass("Humanoid")
+        local head = p.Character and p.Character:FindFirstChild("Head")
+        if hu and hu.Health > 0 and head and d.BB and d.Box then
+            d.
